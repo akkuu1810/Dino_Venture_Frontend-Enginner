@@ -1,46 +1,86 @@
-# Dino Venture - Video Player App
+# Dino Venture — Video Player App
 
-A mobile-first video player application built with **React 18** and **Vite**, inspired by the YouTube mobile experience.
+Mobile-first video player experience built with **React** + **Vite**, inspired by the YouTube mobile UI.
+
+## Live demo
+
+- **App**: `https://dino-venture-frontend-enginner.vercel.app/`
 
 ## Features
 
-- **Home Page** – Scrollable video feed grouped by category (Social Media AI, AI Income, AI Essentials)
-- **Video Cards** – Thumbnail, title, duration badge, and category badge
-- **Full-Page Video Player** – Auto-play, custom controls (play/pause, ±10s skip, seekable progress bar, time display)
-- **In-Player Video List** – Swipe up (mobile) or sidebar (desktop) to reveal related videos from the same category
-- **Smooth Transitions** – Fade animations between views
+- **Scrollable home feed** grouped by category
+- **Video cards** with thumbnail, title, duration badge, and category badge
+- **Watch route support** (`/watch/:categorySlug/:videoSlug`) for shareable links
+- **Full-screen + mini player** experience
+- **Custom controls**: play/pause, ±10s skip, seekable progress bar, time display
+- **Related videos panel**: swipe up on mobile / sidebar on desktop
+- **Smooth transitions** between views
+- **Mobile-first touch handling** for dragging and gestures
 
-## Tech Stack
+## Tech stack
 
-- React 18
-- Vite 5
-- React Router DOM 6
-- YouTube Iframe API (for embedded videos)
+- **React 18**
+- **Vite 5**
+- **React Router DOM 6**
+- **YouTube Iframe API**
 
-## Run Locally
+## Getting started (local)
+
+### Prerequisites
+
+- Node.js (LTS recommended)
+- npm
+
+### Install
 
 ```bash
 npm install
+```
+
+### Run dev server
+
+```bash
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173)
+Open `http://localhost:5173`
 
-## Build
+## Scripts
 
 ```bash
-npm run build
+npm run dev       # start dev server
+npm run build     # production build (outputs to dist/)
+npm run preview   # preview the production build locally
+npm run lint      # run eslint
 ```
 
-## Project Structure
+## Deployment (Vercel)
+
+This app is deployed on Vercel. For React Router deep links (e.g. `/watch/...`) to work on refresh, ensure the repo includes a rewrite rule (see `vercel.json`).
+
+Typical Vercel settings:
+
+- **Framework preset**: Vite
+- **Build command**: `npm run build`
+- **Output directory**: `dist`
+
+## Project structure
 
 ```
 src/
 ├── components/     # VideoCard, YouTubePlayer
+├── context/        # VideoPlayerContext
 ├── data/           # Video dataset
 ├── pages/          # Home, VideoPlayer
-├── utils/          # YouTube API helper
+├── utils/          # YouTube API helpers
 ├── App.jsx
 ├── main.jsx
 └── index.css
 ```
+
+## Roadmap (nice-to-haves)
+
+- Search + filters
+- Keyboard shortcuts (space/k, j/l, arrows)
+- Persist player state (last watched) in localStorage
+- Basic analytics (video open, play/pause events)
