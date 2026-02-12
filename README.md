@@ -2,9 +2,10 @@
 
 Mobile-first video player experience built with **React** + **Vite**, inspired by the YouTube mobile UI.
 
-## Live demo
+## Links
 
-- **App**: `https://dino-venture-frontend-enginner.vercel.app/`
+- **Live app**: [dino-venture-frontend-enginner.vercel.app](https://dino-venture-frontend-enginner.vercel.app/)
+- **GitHub**: [Dino_Venture_Frontend-Enginner](https://github.com/akkuu1810/Dino_Venture_Frontend-Enginner)
 
 ## Features
 
@@ -53,6 +54,23 @@ npm run build     # production build (outputs to dist/)
 npm run preview   # preview the production build locally
 npm run lint      # run eslint
 ```
+
+## Video durations on cards
+
+Durations are shown on video cards from the start when you provide a **YouTube Data API v3** key.
+
+**Local dev:** create `.env.local` in the project root:
+
+```
+VITE_YOUTUBE_API_KEY=your_api_key_here
+```
+
+**Vercel:** add `VITE_YOUTUBE_API_KEY` in Project → Settings → Environment Variables, then redeploy.
+
+1. Create a key at [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Enable **YouTube Data API v3** for your project
+
+Without the key, durations appear after you play each video (and are cached in localStorage).
 
 ## Deployment (Vercel)
 

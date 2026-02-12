@@ -7,9 +7,11 @@ export default function VideoCard({ video, category }) {
   const navigate = useNavigate();
   const { durationCache } = useVideoPlayer();
   const durationDisplay =
-    durationCache[video.slug] != null
-      ? formatDuration(durationCache[video.slug])
-      : '—';
+    video.duration != null
+      ? formatDuration(video.duration)
+      : durationCache[video.slug] != null
+        ? formatDuration(durationCache[video.slug])
+        : '—';
 
   const handleClick = () => {
     navigate(`/watch/${category.slug}/${video.slug}`, {

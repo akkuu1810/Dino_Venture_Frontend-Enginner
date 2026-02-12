@@ -89,6 +89,15 @@ export const getNextVideoInCategory = (currentVideo, categorySlug) => {
   return list[idx + 1];
 };
 
+/** Returns all unique video slugs (YouTube IDs) from the catalog. */
+export const getAllVideoIds = () => {
+  const ids = new Set();
+  videoData.categories.forEach(({ contents }) => {
+    contents.forEach((v) => v?.slug && ids.add(v.slug));
+  });
+  return [...ids];
+};
+
 export const extractYoutubeId = (urlOrSlug) => {
   if (!urlOrSlug) return null;
   const match = String(urlOrSlug).match(/(?:embed\/|v=)([a-zA-Z0-9_-]{11})/);

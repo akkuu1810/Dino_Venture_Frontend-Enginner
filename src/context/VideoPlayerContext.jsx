@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getVideoById, getCategoryInfo } from '../data/videos';
+import { getVideoById, getCategoryInfo, getAllVideoIds } from '../data/videos';
 import { loadDurationCache, saveDurationCache } from '../utils/durationStorage';
+import { fetchVideoDurations } from '../utils/fetchVideoDurations';
 
 const VideoPlayerContext = createContext(null);
 
@@ -31,6 +32,34 @@ export function VideoPlayerProvider({ children }) {
       return next;
     });
   }, []);
+
+  const setDurationsBulk = useCallback((updates) => {
+    if (!updates || Object.keys(updates).length === 0) return;
+    setDurationCacheState((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const [slug, seconds] of Object.entries(updates)) {
+        if (Number.isFinite(seconds) && next[slug] !== seconds) {
+          next[slug] = seconds;
+          changed = true;
+        }
+      }
+      if (!changed) return prev;
+      saveDurationCache(next);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    const ids = getAllVideoIds();
+    if (ids.length === 0) return;
+    const updates = {};
+    fetchVideoDurations(ids, (slug, seconds) => {
+      updates[slug] = seconds;
+    }).then(() => {
+      if (Object.keys(updates).length > 0) setDurationsBulk(updates);
+    });
+  }, [setDurationsBulk]);
 
   const setVideo = useCallback((v, c) => {
     setVideoState(v);
