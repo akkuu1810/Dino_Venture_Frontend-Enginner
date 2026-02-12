@@ -43,7 +43,7 @@
   align-items: center;
   justify-content: center;
   padding-top: env(safe-area-inset-top);
-  touch-action: none;
+  touch-action: pan-y;
   cursor: grab;
   -webkit-tap-highlight-color: transparent;
 }
@@ -112,11 +112,19 @@
   border-radius: 8px;
   overflow: hidden;
   min-height: 0;
+  z-index: 1;
 }
 
 .video-player.mini .youtube-wrapper {
   position: absolute;
   inset: 0;
+}
+
+/* In mini mode, ensure controls are always clickable/visible. */
+.video-player.mini .youtube-wrapper,
+.video-player.mini .youtube-player-container,
+.video-player.mini .youtube-player-container iframe {
+  pointer-events: none;
 }
 
 .video-player-mini-controls {
@@ -126,6 +134,8 @@
   gap: 12px;
   padding: 0 40px 0 112px;
   min-width: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .video-player-mini-play {
@@ -136,6 +146,17 @@
   align-items: center;
   justify-content: center;
   color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  transition: transform var(--transition), background var(--transition);
+}
+
+.video-player-mini-play:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.video-player-mini-play:active {
+  transform: scale(0.95);
 }
 
 .video-player-mini-play svg {
@@ -391,12 +412,33 @@
   color: #fff;
   background: rgba(0, 0, 0, 0.5);
   border-radius: 50%;
-  z-index: 5;
+  z-index: 25;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Adjust position when list is visible on mobile */
+@media (max-width: 767px) {
+  .video-player.list-open .reveal-list-btn {
+    bottom: calc(60vh + 20px);
+  }
 }
 
 .reveal-list-btn svg {
   width: 28px;
   height: 28px;
+}
+
+.reveal-list-btn:active {
+  transform: scale(0.95);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.reveal-list-btn.active {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .in-player-list {
@@ -445,6 +487,37 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 12px 0;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+/* Show scrollbar on mobile */
+.in-player-list-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+}
+
+.in-player-list-scroll::-webkit-scrollbar {
+  width: 6px;
+  -webkit-appearance: none;
+}
+
+.in-player-list-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.in-player-list-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 3px;
+}
+
+.in-player-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.in-player-list-scroll::-webkit-scrollbar-thumb:active {
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .in-player-list-item {
@@ -518,8 +591,11 @@
     flex-direction: column;
   }
 
-  .reveal-list-btn {
-    display: none;
+  /* Keep reveal-list-btn visible on mobile, hide only on desktop */
+  @media (min-width: 768px) {
+    .reveal-list-btn {
+      display: none;
+    }
   }
 
   .video-player.list-open .video-player-area,

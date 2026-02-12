@@ -45,6 +45,7 @@ export default function VideoPlayer({ fullscreen }) {
   const countdownRef = useRef(null);
   const dragStartY = useRef(0);
   const listRef = useRef(null);
+  const backButtonRef = useRef(null);
   const videoSlugRef = useRef(video?.slug);
 
   videoSlugRef.current = video?.slug;
@@ -104,6 +105,12 @@ export default function VideoPlayer({ fullscreen }) {
 
   const handleBack = () => {
     if (fullscreen) {
+      // On mobile, show suggested videos list when back is clicked
+      const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+      if (isMobile && !listVisible) {
+        setListVisible(true);
+        return;
+      }
       if (!isPlaying && playerRef.current?.pauseVideo) {
         try {
           playerRef.current.pauseVideo();
@@ -255,7 +262,20 @@ export default function VideoPlayer({ fullscreen }) {
 
   const handlePointerDown = (e) => {
     if (!fullscreen) return;
-    e.preventDefault?.();
+    // Don't start dragging if clicking on the back button or list area
+    if (backButtonRef.current && (backButtonRef.current.contains(e.target) || e.target.closest('.control-back-drag'))) {
+      return;
+    }
+    // Don't start dragging if clicking on the list area
+    if (e.target.closest('.in-player-list')) {
+      return;
+    }
+    // Only prevent default on drag handle area to allow page scrolling elsewhere
+    const target = e.target;
+    const dragHandle = target.closest('.video-player-drag-handle');
+    if (dragHandle) {
+      e.preventDefault?.();
+    }
     setIsDragging(true);
     dragStartY.current = getClientY(e);
     setDragY(0);
@@ -263,7 +283,10 @@ export default function VideoPlayer({ fullscreen }) {
 
   const handlePointerMove = (e) => {
     if (!isDragging) return;
-    e.preventDefault?.();
+    // Only prevent default if actually dragging (not just touching)
+    if (Math.abs(getClientY(e) - dragStartY.current) > 5) {
+      e.preventDefault?.();
+    }
     const y = getClientY(e);
     const dy = y - dragStartY.current;
     if (dy > 0) setDragY(dy);
@@ -303,13 +326,49 @@ export default function VideoPlayer({ fullscreen }) {
     <div
       className={`video-player ${fullscreen ? '' : 'mini'} ${listVisible ? 'list-open' : ''} ${isDragging ? 'dragging' : ''}`}
       onClick={!fullscreen ? restore : undefined}
-      onPointerDown={fullscreen ? handlePointerDown : undefined}
-      onPointerMove={fullscreen ? handlePointerMove : undefined}
-      onPointerUp={fullscreen ? handlePointerUp : undefined}
-      onPointerLeave={fullscreen ? handlePointerUp : undefined}
-      onTouchStart={fullscreen ? handlePointerDown : undefined}
-      onTouchMove={fullscreen ? handlePointerMove : undefined}
-      onTouchEnd={fullscreen ? handlePointerUp : undefined}
+      onPointerDown={fullscreen ? (e) => {
+        // Only handle pointer events on drag handle area, not on list
+        const dragHandle = e.target.closest('.video-player-drag-handle');
+        const listArea = e.target.closest('.in-player-list');
+        if (dragHandle && !listArea) {
+          handlePointerDown(e);
+        }
+      } : undefined}
+      onPointerMove={fullscreen ? (e) => {
+        if (isDragging) {
+          handlePointerMove(e);
+        }
+      } : undefined}
+      onPointerUp={fullscreen ? (e) => {
+        if (isDragging) {
+          handlePointerUp(e);
+        }
+      } : undefined}
+      onPointerLeave={fullscreen ? (e) => {
+        if (isDragging) {
+          handlePointerUp(e);
+        }
+      } : undefined}
+      onTouchStart={fullscreen ? (e) => {
+        // Only handle touch on drag handle, allow scrolling elsewhere
+        const dragHandle = e.target.closest('.video-player-drag-handle');
+        const listArea = e.target.closest('.in-player-list');
+        if (dragHandle && !listArea) {
+          handlePointerDown(e);
+        }
+      } : undefined}
+      onTouchMove={fullscreen ? (e) => {
+        // Only handle touch move if dragging
+        if (isDragging) {
+          handlePointerMove(e);
+        }
+      } : undefined}
+      onTouchEnd={fullscreen ? (e) => {
+        // Only handle touch end if dragging
+        if (isDragging) {
+          handlePointerUp(e);
+        }
+      } : undefined}
       onTouchCancel={fullscreen ? handlePointerUp : undefined}
     >
       {fullscreen && (
@@ -319,13 +378,30 @@ export default function VideoPlayer({ fullscreen }) {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerLeave={handlePointerUp}
-          onTouchStart={(e) => { e.stopPropagation(); handlePointerDown(e); }}
-          onTouchMove={(e) => { e.preventDefault(); handlePointerMove(e); }}
-          onTouchEnd={(e) => { e.stopPropagation(); handlePointerUp(e); }}
+          onTouchStart={(e) => { 
+            e.stopPropagation(); 
+            handlePointerDown(e); 
+          }}
+          onTouchMove={(e) => { 
+            if (isDragging) {
+              e.preventDefault(); 
+              handlePointerMove(e); 
+            }
+          }}
+          onTouchEnd={(e) => { 
+            e.stopPropagation(); 
+            handlePointerUp(e); 
+          }}
           onTouchCancel={handlePointerUp}
         >
           <span className="video-player-drag-handle-bar" />
-          <button className="control-back control-back-drag" onClick={(e) => { e.stopPropagation(); handleBack(); }} aria-label="Minimize">
+          <button 
+            ref={backButtonRef}
+            className="control-back control-back-drag" 
+            onClick={(e) => { e.stopPropagation(); handleBack(); }} 
+            onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); handleBack(); }}
+            aria-label="Minimize"
+          >
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
             </svg>
@@ -352,12 +428,6 @@ export default function VideoPlayer({ fullscreen }) {
             className={`video-controls ${controlsVisible ? 'visible' : ''}`}
             onClick={(e) => e.stopPropagation()}
           >
-          <button className="control-back control-back-overlay" onClick={handleBack} aria-label="Back">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
-            </svg>
-          </button>
-
           <div className="control-center">
             <button
               className="control-play"
@@ -410,7 +480,15 @@ export default function VideoPlayer({ fullscreen }) {
 
           <button
             className={`reveal-list-btn ${listVisible ? 'active' : ''}`}
-            onClick={toggleList}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleList();
+            }}
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              toggleList();
+            }}
             aria-label={listVisible ? 'Hide list' : 'Show related videos'}
           >
             <svg viewBox="0 0 24 24" fill="currentColor">
